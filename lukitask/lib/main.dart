@@ -7,36 +7,50 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Lista de Tareas',
-      theme: ThemeData(colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),useMaterial3: true,),
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
       home: TaskListScreen(),
     );
   }
+}
+
+class Task {
+  String title;
+  bool isCompleted;
+  
+  Task(this.title, {this.isCompleted = false});
 }
 
 class TaskListScreen extends StatefulWidget {
   const TaskListScreen({super.key});
 
   @override
-  // ignore: library_private_types_in_public_api
   _TaskListScreenState createState() => _TaskListScreenState();
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  final List<String> _tasks = [];
+  final List<Task> _tasks = [];
   final TextEditingController _controller = TextEditingController();
 
   void _addTask() {
     if (_controller.text.isNotEmpty) {
       setState(() {
-        _tasks.add(_controller.text);
+        _tasks.add(Task(_controller.text));
         _controller.clear();
       });
     }
+  }
+
+  void _toggleTask(int index) {
+    setState(() {
+      _tasks[index].isCompleted = !_tasks[index].isCompleted;
+    });
   }
 
   void _removeTask(int index) {
@@ -79,7 +93,18 @@ class _TaskListScreenState extends State<TaskListScreen> {
               itemCount: _tasks.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_tasks[index]),
+                  leading: Checkbox(
+                    value: _tasks[index].isCompleted,
+                    onChanged: (value) => _toggleTask(index),
+                  ),
+                  title: Text(
+                    _tasks[index].title,
+                    style: TextStyle(
+                      decoration: _tasks[index].isCompleted
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
                     onPressed: () => _removeTask(index),
