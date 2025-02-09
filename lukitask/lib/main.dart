@@ -10,12 +10,12 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Lista de Tareas',
+      title: 'Gestor de Listas de Tareas',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: TaskListScreen(),
+      home: TaskListManager(),
     );
   }
 }
@@ -27,44 +27,46 @@ class Task {
   Task(this.title, {this.isCompleted = false});
 }
 
-class TaskListScreen extends StatefulWidget {
-  const TaskListScreen({super.key});
-
-  @override
-  _TaskListScreenState createState() => _TaskListScreenState();
+class TaskList {
+  String name;
+  List<Task> tasks;
+  
+  TaskList(this.name, {List<Task>? tasks}) : tasks = tasks ?? [];
 }
 
-class _TaskListScreenState extends State<TaskListScreen> {
-  final List<Task> _tasks = [];
-  final TextEditingController _controller = TextEditingController();
+class TaskListManager extends StatefulWidget {
+  const TaskListManager({super.key});
 
-  void _addTask() {
-    if (_controller.text.isNotEmpty) {
+  @override
+  _TaskListManagerState createState() => _TaskListManagerState();
+}
+
+class _TaskListManagerState extends State<TaskListManager> {
+  final List<TaskList> _taskLists = [];
+  final TextEditingController _listController = TextEditingController();
+
+  void _addTaskList() {
+    if (_listController.text.isNotEmpty) {
       setState(() {
-        _tasks.add(Task(_controller.text));
-        _controller.clear();
+        _taskLists.add(TaskList(_listController.text));
+        _listController.clear();
       });
     }
   }
 
-  void _toggleTask(int index) {
-    setState(() {
-      _tasks[index].isCompleted = !_tasks[index].isCompleted;
-    });
-  }
-
-  void _removeTask(int index) {
-    setState(() {
-      _tasks.removeAt(index);
-    });
+  void _openTaskList(TaskList taskList) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TaskListScreen(taskList: taskList),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Lista de Tareas'),
-      ),
+      appBar: AppBar(title: Text('LukiTask')),
       body: Column(
         children: [
           Padding(
@@ -73,7 +75,84 @@ class _TaskListScreenState extends State<TaskListScreen> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _controller,
+                    controller: _listController,
+                    decoration: InputDecoration(
+                      hintText: 'Nombre de la nueva lista',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: _addTaskList,
+                  child: Text('Crear Lista'),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: _taskLists.length,
+              itemBuilder: (context, index) {
+                return ListTile(
+                  title: Text(_taskLists[index].name),
+                  onTap: () => _openTaskList(_taskLists[index]),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class TaskListScreen extends StatefulWidget {
+  final TaskList taskList;
+
+  const TaskListScreen({super.key, required this.taskList});
+
+  @override
+  _TaskListScreenState createState() => _TaskListScreenState();
+}
+
+class _TaskListScreenState extends State<TaskListScreen> {
+  final TextEditingController _taskController = TextEditingController();
+
+  void _addTask() {
+    if (_taskController.text.isNotEmpty) {
+      setState(() {
+        widget.taskList.tasks.add(Task(_taskController.text));
+        _taskController.clear();
+      });
+    }
+  }
+
+  void _toggleTask(int index) {
+    setState(() {
+      widget.taskList.tasks[index].isCompleted = !widget.taskList.tasks[index].isCompleted;
+    });
+  }
+
+  void _removeTask(int index) {
+    setState(() {
+      widget.taskList.tasks.removeAt(index);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.taskList.name)),
+      body: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _taskController,
                     decoration: InputDecoration(
                       hintText: 'Agregar una nueva tarea',
                       border: OutlineInputBorder(),
@@ -90,17 +169,17 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: _tasks.length,
+              itemCount: widget.taskList.tasks.length,
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: Checkbox(
-                    value: _tasks[index].isCompleted,
+                    value: widget.taskList.tasks[index].isCompleted,
                     onChanged: (value) => _toggleTask(index),
                   ),
                   title: Text(
-                    _tasks[index].title,
+                    widget.taskList.tasks[index].title,
                     style: TextStyle(
-                      decoration: _tasks[index].isCompleted
+                      decoration: widget.taskList.tasks[index].isCompleted
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
