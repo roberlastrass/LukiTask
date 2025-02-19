@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:table_calendar/table_calendar.dart';
+import 'package:intl/intl.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,52 +17,35 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: TaskListManager(),
+      home: TaskManagerScreen(),
     );
   }
 }
 
-class Task {
-  String title;
-  bool isCompleted;
-  
-  Task(this.title, {this.isCompleted = false});
-}
-
-class TaskList {
-  String name;
-  List<Task> tasks;
-  
-  TaskList(this.name, {List<Task>? tasks}) : tasks = tasks ?? [];
-}
-
-class TaskListManager extends StatefulWidget {
-  const TaskListManager({super.key});
+class TaskManagerScreen extends StatefulWidget {
+  const TaskManagerScreen({super.key});
 
   @override
-  _TaskListManagerState createState() => _TaskListManagerState();
+  _TaskManagerScreenState createState() => _TaskManagerScreenState();
 }
 
-class _TaskListManagerState extends State<TaskListManager> {
-  final List<TaskList> _taskLists = [];
+class _TaskManagerScreenState extends State<TaskManagerScreen> {
+  final List<String> _taskLists = [];
   final TextEditingController _listController = TextEditingController();
 
   void _addTaskList() {
     if (_listController.text.isNotEmpty) {
       setState(() {
-        _taskLists.add(TaskList(_listController.text));
+        _taskLists.add(_listController.text);
         _listController.clear();
       });
     }
   }
 
-  void _openTaskList(TaskList taskList) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TaskListScreen(taskList: taskList),
-      ),
-    );
+  void _removeTaskList(int index) {
+    setState(() {
+      _taskLists.removeAt(index);
+    });
   }
 
   @override
@@ -77,7 +62,7 @@ class _TaskListManagerState extends State<TaskListManager> {
                   child: TextField(
                     controller: _listController,
                     decoration: InputDecoration(
-                      hintText: 'Nombre de la nueva lista',
+                      hintText: 'Nueva lista de tareas',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -85,7 +70,7 @@ class _TaskListManagerState extends State<TaskListManager> {
                 SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: _addTaskList,
-                  child: Text('Crear Lista'),
+                  child: Text('Agregar'),
                 ),
               ],
             ),
@@ -95,8 +80,19 @@ class _TaskListManagerState extends State<TaskListManager> {
               itemCount: _taskLists.length,
               itemBuilder: (context, index) {
                 return ListTile(
-                  title: Text(_taskLists[index].name),
-                  onTap: () => _openTaskList(_taskLists[index]),
+                  title: Text(_taskLists[index]),
+                  trailing: IconButton(
+                    icon: Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _removeTaskList(index),
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TaskListScreen(taskListName: _taskLists[index]),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -108,53 +104,69 @@ class _TaskListManagerState extends State<TaskListManager> {
 }
 
 class TaskListScreen extends StatefulWidget {
-  final TaskList taskList;
-
-  const TaskListScreen({super.key, required this.taskList});
+  final String taskListName;
+  const TaskListScreen({super.key, required this.taskListName});
 
   @override
   _TaskListScreenState createState() => _TaskListScreenState();
 }
 
 class _TaskListScreenState extends State<TaskListScreen> {
-  final TextEditingController _taskController = TextEditingController();
+  final Map<DateTime, List<Map<String, dynamic>>> _tasks = {};
+  final TextEditingController _controller = TextEditingController();
+  DateTime _selectedDay = DateTime.now();
 
   void _addTask() {
-    if (_taskController.text.isNotEmpty) {
+    if (_controller.text.isNotEmpty) {
       setState(() {
-        widget.taskList.tasks.add(Task(_taskController.text));
-        _taskController.clear();
+        _tasks[_selectedDay] = (_tasks[_selectedDay] ?? [])
+          ..add({"title": _controller.text, "isCompleted": false});
+        _controller.clear();
       });
     }
   }
 
-  void _toggleTask(int index) {
+  void _toggleTask(DateTime date, int index) {
     setState(() {
-      widget.taskList.tasks[index].isCompleted = !widget.taskList.tasks[index].isCompleted;
+      _tasks[date]![index]["isCompleted"] = !_tasks[date]![index]["isCompleted"];
     });
   }
 
-  void _removeTask(int index) {
+  void _removeTask(DateTime date, int index) {
     setState(() {
-      widget.taskList.tasks.removeAt(index);
+      _tasks[date]?.removeAt(index);
+      if (_tasks[date]?.isEmpty ?? false) {
+        _tasks.remove(date);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.taskList.name)),
+      appBar: AppBar(title: Text(widget.taskListName)),
       body: Column(
         children: [
+          TableCalendar(
+            firstDay: DateTime.utc(2020, 1, 1),
+            lastDay: DateTime.utc(2030, 12, 31),
+            focusedDay: _selectedDay,
+            selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+            onDaySelected: (selectedDay, focusedDay) {
+              setState(() {
+                _selectedDay = selectedDay;
+              });
+            },
+          ),
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _taskController,
+                    controller: _controller,
                     decoration: InputDecoration(
-                      hintText: 'Agregar una nueva tarea',
+                      hintText: 'Agregar tarea para ${DateFormat('yyyy-MM-dd').format(_selectedDay)}',
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -169,24 +181,24 @@ class _TaskListScreenState extends State<TaskListScreen> {
           ),
           Expanded(
             child: ListView.builder(
-              itemCount: widget.taskList.tasks.length,
+              itemCount: _tasks[_selectedDay]?.length ?? 0,
               itemBuilder: (context, index) {
                 return ListTile(
                   leading: Checkbox(
-                    value: widget.taskList.tasks[index].isCompleted,
-                    onChanged: (value) => _toggleTask(index),
+                    value: _tasks[_selectedDay]![index]["isCompleted"],
+                    onChanged: (value) => _toggleTask(_selectedDay, index),
                   ),
                   title: Text(
-                    widget.taskList.tasks[index].title,
+                    _tasks[_selectedDay]![index]["title"],
                     style: TextStyle(
-                      decoration: widget.taskList.tasks[index].isCompleted
+                      decoration: _tasks[_selectedDay]![index]["isCompleted"]
                           ? TextDecoration.lineThrough
                           : TextDecoration.none,
                     ),
                   ),
                   trailing: IconButton(
                     icon: Icon(Icons.delete, color: Colors.red),
-                    onPressed: () => _removeTask(index),
+                    onPressed: () => _removeTask(_selectedDay, index),
                   ),
                 );
               },
