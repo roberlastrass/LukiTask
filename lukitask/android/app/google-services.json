@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "545546465233",
+    "project_id": "lukitask-5af6f",
+    "storage_bucket": "lukitask-5af6f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:545546465233:android:4d1d187a82a3f2597a7af0",
+        "android_client_info": {
+          "package_name": "com.example.lukitask"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBmQWrO4crRLS1Vohb7iKdNOOR6M3YkSmA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
