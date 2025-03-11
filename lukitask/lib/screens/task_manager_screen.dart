@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lukitask/widgets/custom_app_bar.dart';
 import '../services/firestore_service.dart';
 import 'login_screen.dart';
 import 'task_list_screen.dart';
@@ -80,7 +81,7 @@ class _TaskManagerScreenState extends State<TaskManagerScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Gestor de Listas de Tareas')),
+      appBar: const CustomAppBar(title: 'Gestor de Listas de Tareas'),
       body: Column(
         children: [
           Padding(

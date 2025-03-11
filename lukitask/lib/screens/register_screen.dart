@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:lukitask/widgets/custom_app_bar.dart';
 import '../services/auth_service.dart';
 import 'home_screen.dart';
 
@@ -74,7 +75,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Registro')),
+      appBar: const CustomAppBar(title: 'Registro'),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
