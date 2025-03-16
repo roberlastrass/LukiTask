@@ -6,9 +6,14 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    print("✅ Firebase inicializado correctamente.");
+  } catch (e) {
+    print("❌ Error al inicializar Firebase: $e");
+  }
   runApp(const MyApp());
 }
 
@@ -18,7 +23,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Gestor de Listas de Tareas',
+      title: 'LukiTask',
+      debugShowCheckedModeBanner: false, // Oculta el banner de debug
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,

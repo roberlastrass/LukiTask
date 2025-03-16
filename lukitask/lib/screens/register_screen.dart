@@ -19,7 +19,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
   final AuthService _authService = AuthService();
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String? _errorMessage;
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
+  }
 
   Future<void> _register() async {
     String username = _usernameController.text.trim();
@@ -28,33 +33,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
     String confirmPassword = _confirmPasswordController.text.trim();
 
     if (username.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      setState(() {
-        _errorMessage = 'Todos los campos son obligatorios';
-      });
+      _showErrorMessage('Todos los campos son obligatorios');
       return;
     }
 
     if (password != confirmPassword) {
-      setState(() {
-        _errorMessage = 'Las contraseñas no coinciden';
-      });
+      _showErrorMessage('Las contraseñas no coinciden');
       return;
     }
 
-    // Verificar si el nombre de usuario ya está en uso
     QuerySnapshot query = await _firestore.collection('users').where('username', isEqualTo: username).get();
     if (query.docs.isNotEmpty) {
-      setState(() {
-        _errorMessage = 'El nombre de usuario ya está en uso';
-      });
+      _showErrorMessage('El nombre de usuario ya está en uso');
       return;
     }
 
-    // Registrar usuario en Firebase Authentication
     User? user = await _authService.register(email, password, username);
 
     if (user != null) {
-      // Guardar usuario en Firestore
       await _firestore.collection('users').doc(user.uid).set({
         'username': username,
         'email': email,
@@ -66,9 +62,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
         MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     } else {
-      setState(() {
-        _errorMessage = 'Error al registrar usuario';
-      });
+      _showErrorMessage('Error al registrar usuario');
+    }
+  }
+
+  Future<void> _registerWithGoogle() async {
+    User? user = await _authService.signInWithGoogle();
+    if (user != null) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
+    } else {
+      _showErrorMessage('Error al registrarse con Google');
     }
   }
 
@@ -99,13 +105,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               decoration: const InputDecoration(labelText: 'Repetir contraseña'),
               obscureText: true,
             ),
-            const SizedBox(height: 10),
-            if (_errorMessage != null)
-              Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: _register,
               child: const Text('Registrarse'),
+            ),
+            const SizedBox(height: 10),
+            ElevatedButton(
+              onPressed: _registerWithGoogle,
+              child: const Text('Registrarse con Google'),
             ),
           ],
         ),
