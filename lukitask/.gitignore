@@ -48,3 +48,4 @@ app.*.map.json
 # Ignorar claves y archivos sensibles de Firebase
 android/app/google-services.json
 lib/firebase_options.dart
+android/app/.cxx/
