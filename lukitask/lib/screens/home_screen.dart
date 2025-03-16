@@ -1,24 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:lukitask/widgets/custom_app_bar.dart';
 import 'task_manager_screen.dart';
-import '../services/auth_service.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
-  void _logout(BuildContext context) async {
-    await AuthService().logout();
-    Navigator.pushReplacementNamed(context, '/login');
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Menú Principal'), actions: [
-        IconButton(
-          icon: const Icon(Icons.logout),
-          onPressed: () => _logout(context),
-        )
-      ]),
+      appBar: const CustomAppBar(title: 'Menú Principal'),
       body: Center(
         child: ElevatedButton(
           onPressed: () {
