@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
       title: 'LukiTask',
       debugShowCheckedModeBanner: false, // Oculta el banner de debug
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color.fromARGB(255, 3, 32, 160)),
         useMaterial3: true,
       ),
       initialRoute: '/login',
